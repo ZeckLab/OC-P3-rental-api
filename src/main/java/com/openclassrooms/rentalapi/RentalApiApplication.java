@@ -1,4 +1,4 @@
-package com.openclassrooms.rental_api;
+package com.openclassrooms.rentalapi;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
