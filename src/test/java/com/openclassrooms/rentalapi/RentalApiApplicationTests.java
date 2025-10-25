@@ -1,4 +1,4 @@
-package com.openclassrooms.rental_api;
+package com.openclassrooms.rentalapi;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
