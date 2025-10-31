@@ -8,7 +8,6 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 
-import org.springframework.security.core.Authentication;
 import java.time.Instant;
 import java.util.List;
 
@@ -25,11 +24,12 @@ public class JwtService {
         this.jwtEncoder = jwtEncoder;
     }
 
-    /* TO DO : 
-     * Modifier si nécessaire le paramètre de la méthode Authentication authentication
-     * par un AppUser appUser ou autre. Et voir si AppUser doit implémeter UserDetails
+    /**
+     * Prend en paramètre le mail de l'utilisateur connecté
+     * au lieu d'une Authentifiation car l'application ne gère
+     * pas les rôles et les permissions.
     */
-    public String generateToken(Authentication authentication) {
+    public String generateToken(String username) {
         Instant now = Instant.now();
         Instant expiry = now.plusMillis(jwtExpirationMs);
 
@@ -37,7 +37,7 @@ public class JwtService {
                 .issuer("chatop")
                 .issuedAt(now)
                 .expiresAt(expiry)
-                .subject(authentication.getName())
+                .subject(username)
                 .claim("roles", List.of("ROLE_USER"))
                 .build();
 

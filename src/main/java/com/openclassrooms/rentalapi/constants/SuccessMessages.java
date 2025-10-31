@@ -4,6 +4,7 @@ public class SuccessMessages {
 
     public static final String USER_REGISTERED = "User registered successfully";
     public static final String LOGIN_SUCCESS = "Login successful";
+    public static final String RENTAL_CREATED = "Rental created!";
 
     private SuccessMessages() {
         // Private constructor to prevent instantiation
