@@ -11,6 +11,14 @@ public class ErrorMessages {
     public static final String UNEXPECTED_ERROR = "An unexpected error occurred";
 
 
+    public static final String RENTAL_NOT_FOUND = "Rental not found with ID: ";
+    public static final String INVALID_PICTURE = "Picture is required and must not be empty.";
+    public static final String FILE_STORAGE_FAILED = "Failed to store file: ";
+    public static final String INVALID_FORM_DATA = "Invalid form data received.";
+    public static final String JWT_EXTRACTION_FAILED = "Failed to extract user ID from token.";
+
+
+
     private ErrorMessages() {
         // Private constructor to prevent instantiation
     }

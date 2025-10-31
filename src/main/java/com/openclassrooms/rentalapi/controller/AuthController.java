@@ -53,7 +53,7 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(
                             loginRequestDto.getEmail(),
                             loginRequestDto.getPassword()));
-            String token = jwtService.generateToken(authentication);
+            String token = jwtService.generateToken(authentication.getName());
             return ResponseEntity.ok(new AuthSuccess(token));
         } catch (BadCredentialsException bce) {
             // TO DO : ancienne gestion d'erreur avec message détaillé
@@ -80,17 +80,12 @@ public class AuthController {
 
         appUserRepository.save(user);
 
-        /* TO DO : nouvelle gestion avec token à la création d'un utilisateur
-        la méthode generateToken attend un objet Authentication, donc soit j'authentifie l'utilisateur fraîchement créé,
-        soit je modifie la méthode pour qu'elle puisse accepter un AppUser directement.
-
-        String token = jwtService.generateToken(user);
+        String token = jwtService.generateToken(user.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED).body(new AuthSuccess(token));
-        */
 
         // TO DO : ancienne gestion de la réponse sans token à la création d'un utilisateur
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponseDto(SuccessMessages.USER_REGISTERED, HttpStatus.CREATED.value()));
+        /*return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponseDto(SuccessMessages.USER_REGISTERED, HttpStatus.CREATED.value()));*/
     }
 
     @GetMapping("/me")
