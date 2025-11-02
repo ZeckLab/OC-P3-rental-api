@@ -10,7 +10,19 @@ import lombok.extern.slf4j.Slf4j;
 import com.openclassrooms.rentalapi.constants.ErrorMessages;
 import com.openclassrooms.rentalapi.dto.ApiResponseDto;
 
-// TO DO : Vérifier si cette classe est toujours utile avec la nouvelle gestion des erreurs, car le front attend juste un status 401 sans message détaillé
+/**
+ * Global exception handler for the application.
+ * <p>
+ * Captures and formats exceptions into standardized API responses.
+ * Currently handles:
+ * <ul>
+ * <li>{@link UsernameNotFoundException} → returns 401 Unauthorized</li>
+ * <li>{@link Exception} → returns 500 Internal Server Error</li>
+ * </ul>
+ * <p>
+ * Note: Although the frontend only checks for HTTP status codes (e.g. 401),
+ * this class remains useful for logging and consistent error formatting.
+ */
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
@@ -19,14 +31,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponseDto> handleUserNotFound(UsernameNotFoundException ex) {
         log.warn("User not found: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-            .body(new ApiResponseDto(ErrorMessages.USER_NOT_AUTHENTICATED, HttpStatus.UNAUTHORIZED.value()));
+                .body(new ApiResponseDto(ErrorMessages.USER_NOT_AUTHENTICATED, HttpStatus.UNAUTHORIZED.value()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponseDto> handleGenericException(Exception ex) {
         log.error("Unhandled exception caught", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(new ApiResponseDto(ErrorMessages.UNEXPECTED_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.value()));
+                .body(new ApiResponseDto(ErrorMessages.UNEXPECTED_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.value()));
     }
 }
-

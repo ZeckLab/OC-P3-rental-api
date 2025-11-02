@@ -19,16 +19,16 @@ public class JwtService {
     @Value("${jwt.expiration-ms}")
     private long jwtExpirationMs;
 
-
     public JwtService(JwtEncoder jwtEncoder) {
         this.jwtEncoder = jwtEncoder;
     }
 
     /**
-     * Prend en paramètre le mail de l'utilisateur connecté
-     * au lieu d'une Authentifiation car l'application ne gère
-     * pas les rôles et les permissions.
-    */
+     * Generates a JWT token using the user's email as the subject.
+     * <p>
+     * This method does not rely on a full Authentication object,
+     * as the application does not implement role or permission management.
+     */
     public String generateToken(String username) {
         Instant now = Instant.now();
         Instant expiry = now.plusMillis(jwtExpirationMs);
