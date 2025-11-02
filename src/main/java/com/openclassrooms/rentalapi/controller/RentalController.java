@@ -3,7 +3,9 @@ package com.openclassrooms.rentalapi.controller;
 import com.openclassrooms.rentalapi.dto.RentalCreateDto;
 import com.openclassrooms.rentalapi.dto.RentalDto;
 import com.openclassrooms.rentalapi.dto.RentalResponseDto;
+import com.openclassrooms.rentalapi.exception.ResourceNotFoundException;
 import com.openclassrooms.rentalapi.model.AppUser;
+import com.openclassrooms.rentalapi.model.Rental;
 import com.openclassrooms.rentalapi.repository.AppUserRepository;
 import com.openclassrooms.rentalapi.service.RentalService;
 
@@ -27,6 +29,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -85,4 +88,21 @@ public class RentalController {
 
 		return ResponseEntity.ok(new RentalResponseDto(rentals));
 	}
+
+	@Operation(summary = "Get rental by ID", description = "Returns a rental listing by its ID. Requires a valid JWT token.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Rental returned successfully"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized - missing or invalid JWT"),
+			@ApiResponse(responseCode = "404", description = "Rental not found")
+	})
+	@GetMapping("/{id}")
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<RentalDto> getRentalById(@PathVariable Long id) {
+		log.info("GET /rental/{} called", id);
+
+		RentalDto rentalDto = rentalService.getRentalById(id);
+
+		return ResponseEntity.ok(rentalDto);
+	}
+
 }
