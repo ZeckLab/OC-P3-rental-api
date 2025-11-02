@@ -5,7 +5,9 @@ import com.openclassrooms.rentalapi.model.AppUser;
 import com.openclassrooms.rentalapi.repository.RentalRepository;
 import com.openclassrooms.rentalapi.dto.RentalCreateDto;
 import com.openclassrooms.rentalapi.dto.RentalDto;
+import com.openclassrooms.rentalapi.exception.ResourceNotFoundException;
 import com.openclassrooms.rentalapi.mapper.RentalMapper;
+import static com.openclassrooms.rentalapi.constants.ErrorMessages.RENTAL_NOT_FOUND;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -59,6 +61,29 @@ public class RentalService {
         rental.setUpdatedAt(LocalDateTime.now());
 
         return rentalRepository.save(rental);
+    }
+
+    /**
+     * Retrieves a rental by its ID.
+     *
+     * If no rental is found, throws a ResourceNotFoundException.
+     * Maps the entity to a DTO using the current host as base URL.
+     *
+     * @param id the rental ID
+     * @return the mapped RentalDto
+     * @throws ResourceNotFoundException if no rental is found
+     */
+    public RentalDto getRentalById(Long id) {
+        log.info("Fetching rental with ID: {}", id);
+
+        String baseUrl = getBaseUrl();
+        Rental rental = rentalRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Rental not found with ID: {}", id);
+                    return new ResourceNotFoundException(RENTAL_NOT_FOUND + id);
+                });
+
+        return rentalMapper.toDto(rental, baseUrl);
     }
 
     /**

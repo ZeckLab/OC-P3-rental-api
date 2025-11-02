@@ -34,6 +34,11 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponseDto(ErrorMessages.USER_NOT_AUTHENTICATED, HttpStatus.UNAUTHORIZED.value()));
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<String> handleResourceNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponseDto> handleGenericException(Exception ex) {
         log.error("Unhandled exception caught", ex);
