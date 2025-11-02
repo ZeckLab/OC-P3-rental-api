@@ -3,9 +3,8 @@ package com.openclassrooms.rentalapi.controller;
 import com.openclassrooms.rentalapi.dto.RentalCreateDto;
 import com.openclassrooms.rentalapi.dto.RentalDto;
 import com.openclassrooms.rentalapi.dto.RentalResponseDto;
-import com.openclassrooms.rentalapi.exception.ResourceNotFoundException;
+import com.openclassrooms.rentalapi.dto.RentalUpdateDto;
 import com.openclassrooms.rentalapi.model.AppUser;
-import com.openclassrooms.rentalapi.model.Rental;
 import com.openclassrooms.rentalapi.repository.AppUserRepository;
 import com.openclassrooms.rentalapi.service.RentalService;
 
@@ -13,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 
 import com.openclassrooms.rentalapi.dto.ApiResponseDto;
 
@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
@@ -57,7 +58,7 @@ public class RentalController {
 	})
 	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ApiResponseDto> createRental(
-			@ModelAttribute RentalCreateDto dto,
+			@ModelAttribute @Valid RentalCreateDto dto,
 			Authentication authentication) {
 
 		AppUser owner = appUserRepository.findByEmail(authentication.getName())
@@ -103,6 +104,25 @@ public class RentalController {
 		RentalDto rentalDto = rentalService.getRentalById(id);
 
 		return ResponseEntity.ok(rentalDto);
+	}
+
+	@Operation(summary = "Update rental by ID", description = "Updates an existing rental listing. Requires a valid JWT token.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Rental updated successfully"),
+			@ApiResponse(responseCode = "400", description = "Invalid input data"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized - missing or invalid JWT"),
+			@ApiResponse(responseCode = "404", description = "Rental not found")
+	})
+	@PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<RentalDto> updateRental(
+			@PathVariable Long id,
+			@ModelAttribute @Valid RentalUpdateDto rentalDto) {
+		log.info("PUT /api/rentals/{} called", id);
+
+		RentalDto updatedRental = rentalService.updateRental(id, rentalDto);
+
+		return ResponseEntity.ok(updatedRental);
 	}
 
 }

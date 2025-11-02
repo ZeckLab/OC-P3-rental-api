@@ -5,6 +5,7 @@ import com.openclassrooms.rentalapi.model.AppUser;
 import com.openclassrooms.rentalapi.repository.RentalRepository;
 import com.openclassrooms.rentalapi.dto.RentalCreateDto;
 import com.openclassrooms.rentalapi.dto.RentalDto;
+import com.openclassrooms.rentalapi.dto.RentalUpdateDto;
 import com.openclassrooms.rentalapi.exception.ResourceNotFoundException;
 import com.openclassrooms.rentalapi.mapper.RentalMapper;
 import static com.openclassrooms.rentalapi.constants.ErrorMessages.RENTAL_NOT_FOUND;
@@ -76,14 +77,42 @@ public class RentalService {
     public RentalDto getRentalById(Long id) {
         log.info("Fetching rental with ID: {}", id);
 
-        String baseUrl = getBaseUrl();
         Rental rental = rentalRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Rental not found with ID: {}", id);
                     return new ResourceNotFoundException(RENTAL_NOT_FOUND + id);
                 });
 
-        return rentalMapper.toDto(rental, baseUrl);
+        return rentalMapper.toDto(rental, getBaseUrl());
+    }
+
+    /**
+     * Updates a rental by ID using data from the update DTO.
+     * <p>
+     * This method does not handle image updates — only name, surface, price, and
+     * description are modified.
+     *
+     * @param id  rental ID to update
+     * @param dto updated rental data (excluding image)
+     * @return updated RentalDto
+     * @throws ResourceNotFoundException if the rental is not found
+     */
+    public RentalDto updateRental(Long id, RentalUpdateDto dto) {
+        log.info("[updateRental] Fetching rental with ID: {}", id);
+
+        Rental rental = rentalRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("[updateRental] Rental not found with ID: {}", id);
+                    return new ResourceNotFoundException(RENTAL_NOT_FOUND + id);
+                });
+
+        log.debug("[updateRental] Applying updates from DTO to rental entity");
+        rentalMapper.updateEntityFromDto(dto, rental);
+
+        Rental saved = rentalRepository.save(rental);
+        log.info("[updateRental] Rental updated and saved with ID: {}", saved.getId());
+
+        return rentalMapper.toDto(saved, getBaseUrl());
     }
 
     /**
