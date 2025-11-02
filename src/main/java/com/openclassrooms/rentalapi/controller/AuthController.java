@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -17,15 +16,19 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
-//import com.openclassrooms.rentalapi.constants.ErrorMessages;
-import com.openclassrooms.rentalapi.constants.SuccessMessages;
-import com.openclassrooms.rentalapi.dto.ApiResponseDto;
 import com.openclassrooms.rentalapi.dto.AuthSuccess;
 import com.openclassrooms.rentalapi.dto.LoginRequestDto;
 import com.openclassrooms.rentalapi.dto.RegisterRequestDto;
+import com.openclassrooms.rentalapi.mapper.AppUserMapper;
 import com.openclassrooms.rentalapi.dto.AppUserDto;
 import com.openclassrooms.rentalapi.repository.AppUserRepository;
 import com.openclassrooms.rentalapi.service.JwtService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import static com.openclassrooms.rentalapi.constants.ErrorMessages.*;
 import com.openclassrooms.rentalapi.model.AppUser;
 
@@ -34,42 +37,62 @@ import com.openclassrooms.rentalapi.model.AppUser;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager AuthenticationManager;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+    private final AppUserRepository appUserRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AppUserMapper appUserMapper;
 
-    @Autowired
-    private JwtService jwtService;
+    public AuthController(
+            AuthenticationManager authenticationManager,
+            JwtService jwtService,
+            AppUserRepository appUserRepository,
+            PasswordEncoder passwordEncoder,
+            AppUserMapper appUserMapper) {
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
+        this.appUserRepository = appUserRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.appUserMapper = appUserMapper;
+    }
 
-    @Autowired
-    private AppUserRepository appUserRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
+    @Operation(summary = "Login", description = "Authenticates a user and returns a JWT token if credentials are valid")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Login successful, JWT returned"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid credentials")
+    })
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
+    public ResponseEntity<AuthSuccess> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
+        log.info("Login attempt for email: {}", loginRequestDto.getEmail());
+
         try {
-            Authentication authentication = AuthenticationManager.authenticate(
+            Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequestDto.getEmail(),
                             loginRequestDto.getPassword()));
             String token = jwtService.generateToken(authentication.getName());
+            log.info("Login successful for user: {}", authentication.getName());
+
             return ResponseEntity.ok(new AuthSuccess(token));
         } catch (BadCredentialsException bce) {
-            // TO DO : ancienne gestion d'erreur avec message détaillé
-            // A modifier pour correspondre au Front qui attend juste un status 401
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ApiResponseDto(INVALID_CREDENTIALS, HttpStatus.UNAUTHORIZED.value()));
+            log.warn("Login failed — invalid credentials for email: {}", loginRequestDto.getEmail());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
     }
 
+    @Operation(summary = "Register", description = "Registers a new user and returns a JWT token")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User registered successfully"),
+            @ApiResponse(responseCode = "400", description = "Bad Request - invalid input data"),
+            @ApiResponse(responseCode = "409", description = "Conflict - email already exists")
+    })
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequestDto request) {
+    public ResponseEntity<AuthSuccess> register(@Valid @RequestBody RegisterRequestDto request) {
+        log.info("Registration attempt for email: {}", request.getEmail());
+
         if (appUserRepository.findByEmail(request.getEmail()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("{}");
-            // ancienne gestion d'erreur
-            /*return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ApiResponseDto(ErrorMessages.EMAIL_ALREADY_IN_USE, HttpStatus.CONFLICT.value()));*/
+            log.warn("Registration failed — email already exists: {}", request.getEmail());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
         }
 
         AppUser user = AppUser.builder()
@@ -79,34 +102,30 @@ public class AuthController {
                 .build();
 
         appUserRepository.save(user);
+        log.info("New user registered: {}", user.getEmail());
 
         String token = jwtService.generateToken(user.getEmail());
-        return ResponseEntity.status(HttpStatus.CREATED).body(new AuthSuccess(token));
+        log.debug("JWT token generated for user: {}", user.getEmail());
 
-        // TO DO : ancienne gestion de la réponse sans token à la création d'un utilisateur
-        /*return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponseDto(SuccessMessages.USER_REGISTERED, HttpStatus.CREATED.value()));*/
+        return ResponseEntity.ok(new AuthSuccess(token));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Get current authenticated user", description = "Returns the profile information of the currently authenticated user. Requires a valid JWT token.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User profile returned"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - missing or invalid JWT")
+    })
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+    public ResponseEntity<AppUserDto> getCurrentUser(Authentication authentication) {
         String email = authentication.getName();
-
         log.info("Authenticated user retrieved: {}", email);
 
         AppUser user = appUserRepository.findByEmail(email)
-            .orElseThrow(() -> new UsernameNotFoundException(USER_NOT_FOUND + email));
-
+                .orElseThrow(() -> new UsernameNotFoundException(USER_NOT_FOUND + email));
         log.info("Authenticated user retrieved");
 
-        AppUserDto dto = new AppUserDto(
-            user.getId(),
-            user.getEmail(),
-            user.getName(),
-            user.getCreatedAt(),
-            user.getUpdatedAt()
-        );
-
+        AppUserDto dto = appUserMapper.toDto(user);
         log.debug("Returning user DTO: {}", dto);
 
         return ResponseEntity.ok(dto);
