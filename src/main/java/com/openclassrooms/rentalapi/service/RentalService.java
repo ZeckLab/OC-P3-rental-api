@@ -10,7 +10,6 @@ import com.openclassrooms.rentalapi.exception.ResourceNotFoundException;
 import com.openclassrooms.rentalapi.mapper.RentalMapper;
 import static com.openclassrooms.rentalapi.constants.ErrorMessages.RENTAL_NOT_FOUND;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,9 +47,8 @@ public class RentalService {
      *
      * @param dto   the rental creation data
      * @param owner the user who owns the rental
-     * @return the persisted {@link Rental} entity
      */
-    public Rental createRental(RentalCreateDto dto, AppUser owner) {
+    public void createRental(RentalCreateDto dto, AppUser owner) {
         // Store the uploaded image and retrieve its URL
         String imageUrl = fileStorageService.store(dto.getPicture());
         log.info("Image successfully stored: {}", imageUrl);
@@ -58,10 +56,8 @@ public class RentalService {
         Rental rental = rentalMapper.toEntity(dto);
         rental.setPicture(imageUrl);
         rental.setOwner(owner);
-        rental.setCreatedAt(LocalDateTime.now());
-        rental.setUpdatedAt(LocalDateTime.now());
 
-        return rentalRepository.save(rental);
+        rentalRepository.save(rental);
     }
 
     /**
