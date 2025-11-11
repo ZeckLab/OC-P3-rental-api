@@ -18,10 +18,14 @@ The Angular frontend was already in place using mock data. This API now powers i
 - Java 21
 - Spring Boot 3.5.7
 - MySQL
-- **HeidiSQL** – GUI tool for managing and querying the MySQL database
-- **Mockoon** - Used initially to simulate external APIs and test routing before backend implementation
-- **Postman** -  Tool for manually testing API endpoints and inspecting responses
 
+## 🛠️ Tools
+
+- **Visual Studio Code** – Main IDE used for coding, debugging, and managing the project structure
+- **Postman** – Tool for manually testing API endpoints, inspecting HTTP requests/responses, and managing collections
+- **HeidiSQL** – GUI tool for managing and querying the MySQL database
+- **Mockoon** – Used initially to simulate external APIs and test routing before backend implementation
+- **Swagger UI** – Automatically generated interface for exploring and testing API endpoints directly from the browser
 
 ## 📦 Dependencies
 
@@ -39,17 +43,13 @@ The Angular frontend was already in place using mock data. This API now powers i
 ## 🔧 Prerequisites for this project  : Rental API
 Before getting started, make sure the following tools are installed on your machine:
 
-- **Java Jdk 21 (LTS at the time)**
+- **Java Jdk 21**
 
     ➤ [Download Jdk 21](https://adoptium.net/fr/temurin/releases?version=21)
 
 - **MySql 8 (Oracle)**
 
     ➤ [Download MySql 8](https://dev.mysql.com/downloads/installer/)
-
-- **Recommended IDE : Visual Studio Code as the development environment**
-
-    ➤ [Download Visual Studio Code](https://code.visualstudio.com)
 
 ## 🚀 Project Setup : Rental Api (this repository)
 - Clone the repository from the following address :
@@ -116,7 +116,7 @@ Before running the API, make sure your MySQL database is properly installed and 
 
 ### Install MySQL
 
-Download and install MySQL 8 from the official website:  
+Download and install MySQL 8 from the official website:
 ➡️ [Download MySQL](https://dev.mysql.com/downloads/installer/)
 
 During installation, note your root password.
@@ -174,7 +174,7 @@ Authorization: Bearer <your_token>
 
 Once the backend is running, you have **two alternatives** to interact with the API:
 
-1. **Swagger (recommended)** – A built-in interface to test endpoints directly in the browser  
+1. **Swagger (recommended)** – A built-in interface to test endpoints directly in the browser
 2. **Angular frontend** – A separate client application provided by OpenClassrooms
 
 Choose the method that best suits your workflow. Both are explained below.
